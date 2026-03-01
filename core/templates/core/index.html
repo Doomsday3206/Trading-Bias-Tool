@@ -1,145 +1,258 @@
-{% extends "base.html" %}
-
-{% block title %}{{ project_name }}{% endblock %}
-
-{% block head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg-color-start: #6a11cb;
-    --bg-color-end: #2575fc;
-    --text-color: #ffffff;
-    --card-bg-color: rgba(255, 255, 255, 0.01);
-    --card-border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(45deg, var(--bg-color-start), var(--bg-color-end));
-    color: var(--text-color);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    text-align: center;
-    overflow: hidden;
-    position: relative;
-  }
-
-  body::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><path d='M-10 10L110 10M10 -10L10 110' stroke-width='1' stroke='rgba(255,255,255,0.05)'/></svg>");
-    animation: bg-pan 20s linear infinite;
-    z-index: -1;
-  }
-
-  @keyframes bg-pan {
-    0% {
-      background-position: 0% 0%;
-    }
-
-    100% {
-      background-position: 100% 100%;
-    }
-  }
-
-  main {
-    padding: 2rem;
-  }
-
-  .card {
-    background: var(--card-bg-color);
-    border: 1px solid var(--card-border-color);
-    border-radius: 16px;
-    padding: 2.5rem 2rem;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
-  }
-
-  h1 {
-    font-size: clamp(2.2rem, 3vw + 1.2rem, 3.2rem);
-    font-weight: 700;
-    margin: 0 0 1.2rem;
-    letter-spacing: -0.02em;
-  }
-
-  p {
-    margin: 0.5rem 0;
-    font-size: 1.1rem;
-    opacity: 0.92;
-  }
-
-  .loader {
-    margin: 1.5rem auto;
-    width: 56px;
-    height: 56px;
-    border: 4px solid rgba(255, 255, 255, 0.25);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .runtime code {
-    background: rgba(0, 0, 0, 0.25);
-    padding: 0.15rem 0.45rem;
-    border-radius: 4px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-  }
-
-  footer {
-    position: absolute;
-    bottom: 1rem;
-    width: 100%;
-    text-align: center;
-    font-size: 0.85rem;
-    opacity: 0.75;
-  }
-</style>
-{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<main>
-  <div class="card">
-    <h1>Analyzing your requirements and generating your app…</h1>
-    <div class="loader" role="status" aria-live="polite" aria-label="Applying initial changes">
-      <span class="sr-only">Loading…</span>
+<div class="container-fluid px-4 py-5" style="background-color: #121212; min-height: 100vh; color: #ffffff;">
+    
+    <!-- Hero Section with Symbol Search -->
+    <div class="row mb-5 justify-content-center">
+        <div class="col-lg-6 text-center">
+            <h1 class="display-4 fw-bold text-white mb-3">
+                <span style="color: #00ff88;">Markov Chain</span> & SMA Tool
+            </h1>
+            <p class="lead text-white mb-4">Analyse daily bias with statistical Markov probabilities and SMA crossovers.</p>
+            <form method="post" class="d-flex shadow-sm" id="analyzeForm">
+                {% csrf_token %}
+                <input type="text" name="symbol" class="form-control form-control-lg bg-dark border-0 text-white shadow-none" placeholder="Enter Symbol (e.g. AAPL, TSLA, BTC-USD)" required value="{{ symbol }}">
+                <button type="submit" class="btn btn-lg px-4 ms-2 fw-bold" style="background-color: #00ff88; color: #ffffff;">ANALYSE</button>
+            </form>
+            <div id="loading" class="mt-3 d-none">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="ms-2">Analysing market data...</span>
+            </div>
+            {% if history %}
+            <div class="mt-3 text-white small">
+                Recent: 
+                {% for h in history %}
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="symbol" value="{{ h }}">
+                    <button type="submit" class="btn btn-link p-0 text-white mx-1" style="text-decoration:none;">{{ h }}</button>
+                </form>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
     </div>
-    <p class="hint">AppWizzy AI is collecting your requirements and applying the first changes.</p>
-    <p class="hint">This page will refresh automatically as the plan is implemented.</p>
-    <p class="runtime">
-      Runtime: Django <code>{{ django_version }}</code> · Python <code>{{ python_version }}</code>
-      — UTC <code>{{ current_time|date:"Y-m-d H:i:s" }}</code>
-    </p>
-  </div>
-</main>
-<footer>
-  Page updated: {{ current_time|date:"Y-m-d H:i:s" }} (UTC)
-</footer>
+
+    {% if analysis %}
+    <!-- Output Summary Card (Top of Screen) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark border-0 shadow-sm" style="background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);">
+                <div class="card-body p-4">
+                    <div class="row align-items-center text-center text-md-start">
+                        <div class="col-md-2 mb-3 mb-md-0">
+                            <h2 class="h1 fw-bold text-white mb-0">{{ analysis.symbol }}</h2>
+                            <p class="text-white small mb-0">{{ analysis.latest_date }}</p>
+                        </div>
+                        <div class="col-md-2 mb-3 mb-md-0 border-start border-secondary">
+                            <p class="text-white small mb-0">LATEST PRICE</p>
+                            <h3 class="fw-bold text-white mb-0">${{ analysis.latest_price }}</h3>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0 border-start border-secondary">
+                            <p class="text-white small mb-0">MARKOV PREDICTION</p>
+                            <h3 class="fw-bold mb-0" style="color: {% if 'Rise' in analysis.predicted_state %}#00ff88{% else %}#ff4b2b{% endif %};">
+                                {{ analysis.predicted_state }}
+                            </h3>
+                            <p class="small mb-0 text-white">Probability: <span class="text-white">{{ analysis.probability }}</span></p>
+                        </div>
+                        <div class="col-md-2 mb-3 mb-md-0 border-start border-secondary">
+                            <p class="text-white small mb-0">CURRENT STATE</p>
+                            <h4 class="fw-bold text-white mb-0">{{ analysis.current_state }}</h4>
+                        </div>
+                        <div class="col-md-3 border-start border-secondary">
+                            <p class="text-white small mb-0">TREND DIRECTION</p>
+                            <h3 class="fw-bold mb-0 {% if analysis.trend == 'Bullish' %}text-success{% else %}text-danger{% endif %}">
+                                {{ analysis.trend }}
+                            </h3>
+                            <p class="small mb-0 text-white">SMA20: <span class="text-white">{{ analysis.sma20 }}</span> | SMA50: <span class="text-white">{{ analysis.sma50 }}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Section 2: Markov Prediction Panel -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 bg-dark border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-white"><i class="bi bi-graph-up me-2"></i> Markov Transition Matrix</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-borderless table-hover small" style="background-color: transparent;">
+                            <thead>
+                                <tr class="text-white">
+                                    <th>From \ To</th>
+                                    {% for name in analysis.state_names %}
+                                    <th title="{{ name }}">{{ forloop.counter0 }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in analysis.matrix %}
+                                <tr>
+                                    <td class="text-white fw-bold">{{ forloop.counter0 }}</td>
+                                    {% for prob in row %}
+                                    <td style="background-color: rgba(0, 255, 136, {{ prob }});">{{ prob|floatformat:2 }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        <h6 class="text-white small fw-bold text-uppercase">Bin Definitions (Standard Deviation)</h6>
+                        <div class="row row-cols-2 g-2">
+                            <div class="col small text-white"><span class="badge bg-danger">0</span> Very Big Drop (≤ -2σ)</div>
+                            <div class="col small text-white"><span class="badge bg-danger">1</span> Big Drop (-2σ to -1σ)</div>
+                            <div class="col small text-white"><span class="badge bg-secondary">2</span> Small Drop (-1σ to mean)</div>
+                            <div class="col small text-white"><span class="badge bg-success">3</span> Small Rise (mean to +1σ)</div>
+                            <div class="col small text-white"><span class="badge bg-success">4</span> Big Rise (+1σ to +2σ)</div>
+                            <div class="col small text-white"><span class="badge bg-success">5</span> Very Big Rise (> +2σ)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Moving Average Trend Panel -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 bg-dark border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-white"><i class="bi bi-arrow-repeat me-2"></i> SMA 20/50 Crossovers</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-borderless table-hover mb-0">
+                            <thead>
+                                <tr class="text-white small text-uppercase">
+                                    <th>Date</th>
+                                    <th>Price</th>
+                                    <th>Event</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cross in analysis.crossovers %}
+                                <tr>
+                                    <td>{{ cross.Date }}</td>
+                                    <td>{{ cross.Price }}</td>
+                                    <td>
+                                        <span class="badge {% if 'Bullish' in cross.Type %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
+                                            {{ cross.Type }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-white py-5">No recent crossovers detected.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Price Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-white">Interactive Candlestick Chart (100d)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="plotlyChart" style="height: 500px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div class="row justify-content-center mt-3">
+        <div class="col-lg-6">
+            {% for message in messages %}
+            <div class="alert alert-danger border-0 bg-danger text-white shadow-sm" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+    document.getElementById('analyzeForm').addEventListener('submit', function() {
+        document.getElementById('loading').classList.remove('d-none');
+    });
+
+    {% if chart_json %}
+    const chartData = {{ chart_json|safe }};
+    const trace1 = {
+        x: chartData.dates,
+        close: chartData.close,
+        high: chartData.high,
+        low: chartData.low,
+        open: chartData.open,
+        type: 'candlestick',
+        xaxis: 'x',
+        yaxis: 'y',
+        name: 'Price'
+    };
+
+    const trace2 = {
+        x: chartData.dates,
+        y: chartData.sma20,
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: '#00ff88', width: 2 },
+        name: 'SMA 20'
+    };
+
+    const trace3 = {
+        x: chartData.dates,
+        y: chartData.sma50,
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: '#ff4b2b', width: 2 },
+        name: 'SMA 50'
+    };
+
+    const data = [trace1, trace2, trace3];
+
+    const layout = {
+        dragmode: 'zoom',
+        showlegend: true,
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#ffffff' },
+        margin: { r: 10, t: 25, b: 40, l: 60 },
+        xaxis: {
+            autorange: true,
+            title: 'Date',
+            type: 'date',
+            rangeslider: { visible: false },
+            gridcolor: '#333'
+        },
+        yaxis: {
+            autorange: true,
+            title: 'Price',
+            type: 'linear',
+            gridcolor: '#333'
+        }
+    };
+
+    Plotly.newPlot('plotlyChart', data, layout, { responsive: true });
+    {% endif %}
+</script>
 {% endblock %}

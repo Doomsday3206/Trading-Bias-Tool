@@ -1,25 +1,34 @@
-import os
-import platform
-
-from django import get_version as django_version
 from django.shortcuts import render
-from django.utils import timezone
+from django.contrib import messages
+from .analysis import get_analysis_data
+import json
 
-
-def home(request):
-    """Render the landing screen with loader and environment details."""
-    host_name = request.get_host().lower()
-    agent_brand = "AppWizzy" if host_name == "appwizzy.com" else "Flatlogic"
-    now = timezone.now()
-
-    context = {
-        "project_name": "New Style",
-        "agent_brand": agent_brand,
-        "django_version": django_version(),
-        "python_version": platform.python_version(),
-        "current_time": now,
-        "host_name": host_name,
-        "project_description": os.getenv("PROJECT_DESCRIPTION", ""),
-        "project_image_url": os.getenv("PROJECT_IMAGE_URL", ""),
-    }
-    return render(request, "core/index.html", context)
+def index(request):
+    symbol = request.POST.get('symbol', '').strip().upper()
+    analysis = None
+    
+    # Store history in session
+    history = request.session.get('analysis_history', [])
+    
+    if request.method == 'POST' and symbol:
+        data, error = get_analysis_data(symbol)
+        if error:
+            messages.error(request, f"Error: {error}")
+        else:
+            analysis = data
+            # Update history
+            if symbol not in history:
+                history.insert(0, symbol)
+                request.session['analysis_history'] = history[:10] # Keep last 10
+                
+    # Prepare chart JSON if analysis exists
+    chart_json = None
+    if analysis:
+        chart_json = json.dumps(analysis['chart_data'])
+        
+    return render(request, 'core/index.html', {
+        'analysis': analysis,
+        'symbol': symbol,
+        'history': history,
+        'chart_json': chart_json
+    })
